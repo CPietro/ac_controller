@@ -211,9 +211,28 @@ String ambientDataToString(float temp, float rh) {
 
 void ambientDataHandler() {
   TimeNow = millis();
-  if (TimeNow - LastUpdate > 5000 && CurrentEncoderValue == 0) {
-    lcd.setCursor(0, 1);
-    lcd.print(ambientDataToString(dht.readTemperature(), dht.readHumidity()));
+  if (TimeNow - LastUpdate > 5000) {
+    if (CurrentEncoderValue == 0) {
+      lcd.setCursor(0, 1);
+      lcd.print(ambientDataToString(dht.readTemperature(), dht.readHumidity()));
+    }
+    
+    if (acUnit.state == kFujitsuAcCmdTurnOff) {
+      float temp = dht.readTemperature();
+      if (temp >= 30.0f) {
+        acUnit.temp = 28.0f;
+        acUnit.mode = kFujitsuAcModeCool;
+        acUnit.fanSpeed = kFujitsuAcFanAuto;
+        acUnit.on();
+        Edited = true;
+      } else if (temp <= 10.0f) {
+        acUnit.temp = 16.0f;
+        acUnit.mode = kFujitsuAcModeHeat;
+        acUnit.fanSpeed = kFujitsuAcFanAuto;
+        acUnit.on();
+        Edited = true;
+      }
+    }
     LastUpdate = TimeNow;
   }
 }
