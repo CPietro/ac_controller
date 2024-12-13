@@ -125,6 +125,8 @@ public:
     }
   }
 
+  /// presenceToString.
+  /// @return "ON " String if human presence detection is currently enabled, else "OFF"
   String presenceToString() {
     if (presence) {
       return "ON ";
@@ -133,18 +135,26 @@ public:
     }
   }
 
+  /// currentSetpointToString.
+  /// @return The current setpoint temperature in String type
   String currentSetpointToString() {
     return String(temp);
   }
 
+
+  /// tryGetSetpoint.
+  /// @return Setpoint to be displayed in main menu if the AC unit is on, else a blank string.
   String tryGetSetpoint() {
-    if (kFujitsuAcCmdTurnOn || kFujitsuAcCmdStayOn) {
+    if (state == kFujitsuAcCmdTurnOn || state == kFujitsuAcCmdStayOn) {
       return "SET: " + currentSetpointToString();
     } else {
-      return "";
+      return "            ";
     }
   }
 
+  /// modeToString.
+  /// @param[in] inputMode Mode in kFujitsuAcMode terms.
+  /// @return Corresponding AC mode display value if in range.
   static String modeToString(uint8_t inputMode) {
     switch (inputMode) {
       case 0x0:
@@ -160,6 +170,9 @@ public:
     }
   }
 
+  /// fanSpeedToString.
+  /// @param[in] inputFan Fan level in kFujitsuAcFan terms.
+  /// @return Corresponding fan level display value if in range.
   static String fanSpeedToString(uint8_t inputFan) {
     switch (inputFan) {
       case 0x0:
@@ -175,15 +188,21 @@ public:
     }
   }
 
+  /// Converts the menu case term to its corresponding setpoint value
+  /// @param[in] value Menu case value to be converted.
+  /// @return The converted Celsius setpoint value.
   static float_t encoderToSetpoint(int16_t value) {
     return static_cast<float_t>(value) / 2 + 16;
   }
 
+  /// Converts the setpoint value in Celsius to a menu case.
+  /// @param[in] value Setpoint value to be converted.
+  /// @return The converted setpoint value in menu case terms.
   static int16_t setpointToEncoder(float_t value) {
     return static_cast<int16_t>((value - 16) * 2);
   }
 
-  // Prints the current IRFujitsuAC state and the hex IR code.
+  /// Prints the current IRFujitsuAC state and the hex IR code.
   static void printState() {
     Serial.println("Fujitsu A/C remote is in the following state:");
     Serial.printf("  %s\n", ac.toString().c_str());
@@ -197,6 +216,8 @@ public:
 
 FujiAC acUnit;
 
+/// Handles the encoder button press interrupt.
+/// Has some kind of software debouncer built in.
 void press() {
   TimeNow = millis();
   if (TimeNow - TimePrevious > 500) {
@@ -205,10 +226,17 @@ void press() {
   TimePrevious = TimeNow;
 }
 
+/// Formats ambient data to be displayed on main menu (CurrentEncoderValue == 0).
+/// @param[in] temp Temperature to be displayed, with 1 decimal.
+/// @param[in] rh Relative humidity to be displayed, with 0 decimals.
+/// @return String formatted as: "T: <temp> RH: <rh>%".
 String ambientDataToString(float temp, float rh) {
   return "T: " + String(temp, 1) + " RH: " + String(rh, 0) + "%";
 }
 
+/// Handles temperature and humidity refreshing when on main menu (CurrentEncoderValue == 0), every 5 seconds.
+/// Handles protective heating when the ambient temperature drops below 10 degrees Celsius.
+/// Handles protective cooling when the ambient temperature rises above 30 degrees Celsius.
 void ambientDataHandler() {
   TimeNow = millis();
   if (TimeNow - LastUpdate > 5000) {
@@ -255,6 +283,11 @@ void presenceHandler() {
   }
 }
 
+/// Changes between menus by applying new boundaries to the encoder.
+/// @param[in] min New menu's lower boundary, applied to MenuMin.
+/// @param[in] max New menu's upper boundary, applied to MenuMax.
+/// @param[in] current New menu's current position, applied to CurrentEncoderValue and PrevEcnoderValue.
+/// Refreshes the menu output on the display.
 void changeMenu(int16_t min, int16_t max, int16_t current) {
   NewEncoder::EncoderState currentEncoderState;
   encoder.getState(currentEncoderState);
@@ -267,6 +300,10 @@ void changeMenu(int16_t min, int16_t max, int16_t current) {
   }
 }
 
+/// Handles displaying the menus on the 1602 LCD.
+/// Called from loop() without delays.
+/// Will update the menu when either the encoder is rotated, its button is pressed or the displayed data changed in the background (edited).
+/// Visually (on the display) the menu may seem to have submenu, but it's really just one entity, of which you can access only the portion between current lower and upper boundaries (MenuMin and MenuMax).
 void menuHandler() {
   if (Rotated || Pressed || Edited) {
     if (Edited)
@@ -444,18 +481,23 @@ void setup() {
   lcd.clear();
   lcd.backlight();
 
+  // DHT init
   pinMode(DHT_PIN, INPUT);
   dht.begin();
 
+  // LD2410C presence sensor init
   pinMode(LD2410_PIN, INPUT);
 
+  // AC unit init
   ac.begin();
+  acUnit = FujiAC();
+  
+  // Serial init
   Serial.begin(115200);
+
+  // Encoder init
   NewEncoder::EncoderState state;
   delay(200);
-
-  acUnit = FujiAC();
-
   if (!encoder.begin()) {
     Serial.println("Encoder Failed to Start. Check pin assignments and available interrupts. Aborting.");
     while (1) {
@@ -465,7 +507,6 @@ void setup() {
     encoder.getState(state);
     PrevEncoderValue = state.currentValue;
   }
-
   pinMode(SW, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(SW), press, FALLING);
 }
