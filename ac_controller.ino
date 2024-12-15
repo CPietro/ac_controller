@@ -6,15 +6,22 @@
 #include <NewEncoder.h>
 #include <DHT.h>
 
-#define IR_PIN 23 // IR Emitter
-#define CLK 17 // Rotary encoder CLK
-#define DT 16 // Rotary encoder DT
-#define SW 4 // Rotary encoder SW
-#define LD2410_PIN 14 // LD2410 Presence Detector output
-#define DHT_PIN 13 // DHT11 Temp and RH sensor
+/// IR Emitter
+#define IR_PIN 23
+/// Rotary encoder CLK
+#define CLK 17
+/// Rotary encoder DT
+#define DT 16
+/// Rotary encoder SW
+#define SW 4
+/// LD2410 Presence Detector output
+#define LD2410_PIN 14
+/// DHT11 Temp and RH sensor
+#define DHT_PIN 13
 
 #define DHTTYPE DHT11
-#define PRESENCE_SWITCH_INTERVAL 1 // Time between each AC Unit state switch due to presence detection, in minutes
+/// Time between each AC Unit state switch due to presence detection, in minutes
+#define PRESENCE_SWITCH_INTERVAL 1
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);  // Display I2C address 0x27
 IRFujitsuAC ac(IR_PIN);
@@ -25,20 +32,30 @@ int LastUpdate;
 bool GotPresence;
 int LastPresenceStateSwitch = -PRESENCE_SWITCH_INTERVAL * 60 * 1000; // Gets the presence detection to work in the first PRESENCE_SWITCH_INTERVAL minutes after board startup
 
-int16_t MenuMin = 0; // Current menu lower bound
-int16_t MenuMax = 4; // Current menu upper bound
+/// Current menu lower bound
+int16_t MenuMin = 0;
+/// Current menu upper bound
+int16_t MenuMax = 4;
 NewEncoder encoder(DT, CLK, MenuMin, MenuMax, MenuMin, FULL_PULSE);
 int16_t PrevEncoderValue, CurrentEncoderValue;
 bool Pressed, Edited;
 bool Rotated = true;
 int TimePrevious, TimeNow;
 
+/// @class FujiAC
+/// @brief Represents an AC Unit.
+/// Allows configuring and sending commands to an AC unit though an IR LED. It supports management of mode, fan speed, temperature, state (on/off) and presence detection. 
 class FujiAC {
 public:
+  /// AC unit mode, in kFujitsuAcMode terms.
   uint8_t mode;
+  /// AC unit fan speed, in kFujitsuAcFan terms.
   uint8_t fanSpeed;
+  /// AC Unit state, in kFujitsuAcCmd terms.
   uint8_t state;
+  /// Temperature setpoint in Celsius degrees.
   float_t temp;
+  /// Human presence detection status, true if enabled, false if disabled.
   bool presence;
 
   FujiAC() {
@@ -49,6 +66,7 @@ public:
     loadFromMemory();
   }
 
+  /// Saves the variables values to memory.
   void saveToMemory() {
     Preferences preferences;
     preferences.begin("FujiAC", false);
@@ -60,6 +78,7 @@ public:
     preferences.end();
   }
 
+  /// Loads the last saved variables value from memory if they exist, else they are set to default values.
   void loadFromMemory() {
     Preferences preferences;
     preferences.begin("FujiAC", true);
@@ -71,6 +90,7 @@ public:
     preferences.end();
   }
 
+  /// Sends a command to the AC unit with the currently set variables value and prints the AC unit state.
   void sendCommand() {
     saveToMemory();
 
@@ -82,6 +102,7 @@ public:
     FujiAC::printState();
   }
 
+  /// Turns on the AC unit
   void on() {
     Serial.println("ON request received");
     state = kFujitsuAcCmdTurnOn;
@@ -89,12 +110,14 @@ public:
     state = kFujitsuAcCmdStayOn;
   }
 
+  /// Turns off the AC unit
   void off() {
     Serial.println("OFF request received");
     state = kFujitsuAcCmdTurnOff;
     this->sendCommand();
   }
 
+  /// Turns the AC unit on if off and the other way around by calling on() and off() methods.
   void switchState() {
     if (getState()) {
       off();
@@ -103,20 +126,24 @@ public:
     }
   }
 
+  /// Turns human presence detection on if off and the other way around. Writes the new presence value to memory.
   void switchPresence() {
     presence = !presence;
     saveToMemory();
   }
 
+  /// getState.
+  /// @return true if state is either kFujitsuAcCmdTurnOn or kFujitsuAcCmdStayOn which means the AC unit is on.
+  /// @return false in any other state.
   bool getState() {
     if (state == kFujitsuAcCmdTurnOn || state == kFujitsuAcCmdStayOn)
       return true;
-    else if (state == kFujitsuAcCmdTurnOff)
-      return false;
     else
       return false;
   }
 
+  /// stateToString.
+  /// @return "ON " String if getState is true, else "OFF".
   String stateToString() {
     if (getState()) {
       return "ON ";
@@ -126,7 +153,7 @@ public:
   }
 
   /// presenceToString.
-  /// @return "ON " String if human presence detection is currently enabled, else "OFF"
+  /// @return "ON " String if human presence detection is currently enabled, else "OFF".
   String presenceToString() {
     if (presence) {
       return "ON ";
@@ -136,7 +163,7 @@ public:
   }
 
   /// currentSetpointToString.
-  /// @return The current setpoint temperature in String type
+  /// @return The current setpoint temperature in String type.
   String currentSetpointToString() {
     return String(temp);
   }
@@ -188,7 +215,7 @@ public:
     }
   }
 
-  /// Converts the menu case term to its corresponding setpoint value
+  /// Converts the menu case term to its corresponding setpoint value.
   /// @param[in] value Menu case value to be converted.
   /// @return The converted Celsius setpoint value.
   static float_t encoderToSetpoint(int16_t value) {
