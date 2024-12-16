@@ -16,25 +16,35 @@ The user interface consists of a menu displayed on the 1602 LCD with five differ
 |FAN|Display the currently set AC unit fan speed, which can be either AUTO, HIGH, MEDIUM, LOW or QUIET|Enters the FAN submenu, where it's possible to select a different fan speed via the encoder rotation|
 |PRESENCE DETECTION|Displays the current human presence detection state, which is either ON or OFF|Toggles the presence detection|
 
-#### Main page
-![Main page OFF](img/main_off.png)
-![Main page ON](img/main_on.png)
+<details>
+    <summary>MAIN page</summary>
+    <img src="img/main_off.jpg" alt="Main page OFF">
+    <img src="img/main_on.jpg" alt="Main page ON">
+</details>
 
-#### MODE page
-![MODE page](img/mode.png)
-![MODE page submenu](img/mode_submenu.png)
+<details>
+    <summary>MODE page</summary>
+    <img src="img/mode.jpg" alt="MODE page">
+    <img src="img/mode_submenu.jpg" alt="MODE page submenu">
+</details>
 
-#### SET page
-![SET page](img/set.png)
-![SET page submenu](img/set_submenu.png)
+<details>
+    <summary>SET page</summary>
+    <img src="img/set.jpg" alt="">
+    <img src="img/set_submenu.jpg" alt="">
+</details>
 
-#### FAN page
-![FAN page](img/fan.png)
-![FAN page submenu](img/fan_submenu.png)
+<details>
+    <summary>FAN page</summary>
+    <img src="img/fan.jpg" alt="FAN page">
+    <img src="img/fan_submenu.jpg" alt="FAN page submenu">
+</details>
 
-#### PRESENCE DETECTION page
-![PRESENCE DETECTION page OFF](img/presence_off.png)
-![PRESENCE DETECTION page ON](img/presence_on.png)
+<details>
+    <summary>PRESENCE DETECTION page</summary>
+    <img src="img/presence_off.jpg" alt="PRESENCE DETECTION page OFF">
+    <img src="img/presence_on.jpg" alt="PRESENCE DETECTION page ON">
+</details>
 
 ## Components
 
@@ -44,7 +54,7 @@ The user interface consists of a menu displayed on the 1602 LCD with five differ
 - DHT11 Temp and RH sensor
 - KY-040 Rotary encoder
 - 1602 Liquid Crystal Display
-- I2C 1602 Adapter
+- I2C LCD-1602 Adapter/Interface
 - HiLink LD2410C Human Presence Radar Module
 
 ## Schematic
@@ -52,8 +62,10 @@ The user interface consists of a menu displayed on the 1602 LCD with five differ
 ![Kicad schematic](img/schematic.png)
 
 ## Pictures
-![Picture 1](img/pic1.png)
-![Picture 2](img/pic2.png)
+![Picture 1](img/pic1.jpg)
+![Picture 2](img/pic2.jpg)
+![Picture 3](img/pic3.jpg)
+![Picture 4](img/pic4.jpg)
 
 ## Libraries
 
